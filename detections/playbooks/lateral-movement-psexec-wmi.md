@@ -95,7 +95,67 @@ After closing the incident, ask: **would we have caught this faster?**
 - If Event 7045 (new service) isn't currently alerting on non-standard install paths, that's a detection gap — write it up.
 - If the environment has no baseline of "which accounts normally do remote admin," that's a detection engineering opportunity (UEBA-style anomaly rule).
 
-## 10. Escalation and handoff notes
+## 10. XDR/EDR query reference
+
+Same investigation, written as actual queries per platform. Adjust field names to your tenant's schema — these are the standard field names for each platform as of writing.
+
+**Cortex XDR (XQL)**
+```
+dataset = xdr_data
+| filter event_type = ENUM.PROCESS and action_process_image_name in ("wmiprvse.exe", "services.exe")
+| filter causality_actor_process_image_name != null
+| filter action_process_image_command_line contains "cmd.exe" or action_process_image_command_line contains "powershell.exe"
+| fields agent_hostname, actor_effective_username, action_process_image_command_line, causality_actor_process_image_name, _time
+| sort desc _time
+```
+For the service-creation angle specifically:
+```
+dataset = xdr_data
+| filter event_type = ENUM.PROCESS and event_sub_type = ENUM.PROCESS_START
+| filter action_process_image_name = "services.exe"
+| filter action_process_image_command_line contains "PSEXESVC" or action_process_image_command_line contains ".exe"
+```
+
+**Microsoft Defender XDR (KQL / Advanced Hunting)**
+```kql
+DeviceProcessEvents
+| where InitiatingProcessFileName in~ ("wmiprvse.exe", "services.exe")
+| where FileName in~ ("cmd.exe", "powershell.exe")
+| project Timestamp, DeviceName, AccountName, InitiatingProcessFileName, ProcessCommandLine
+| order by Timestamp desc
+```
+Service-creation angle (Defender surfaces this as an event, not just a process):
+```kql
+DeviceEvents
+| where ActionType == "ServiceInstalled"
+| where InitiatingProcessAccountName != "system"
+| project Timestamp, DeviceName, InitiatingProcessAccountName, AdditionalFields
+```
+
+**CrowdStrike Falcon (Event Search / Falcon Query Language)**
+```
+event_simpleName=ProcessRollup2
+| ParentBaseFileName=wmiprvse.exe OR ParentBaseFileName=services.exe
+| FileName=cmd.exe OR FileName=powershell.exe
+| table ComputerName, UserName, CommandLine, ParentBaseFileName, _time
+```
+
+**Splunk (if ingesting Sysmon/Windows Event Logs)**
+```spl
+index=main (EventCode=1 OR EventCode=7045)
+| search ParentImage="*wmiprvse.exe" OR ParentImage="*services.exe"
+| table _time, ComputerName, User, CommandLine, ParentImage, Image
+| sort -_time
+```
+
+**Elastic (EQL)**
+```eql
+process where event.type == "start" and
+  process.parent.name in ("wmiprvse.exe", "services.exe") and
+  process.name in ("cmd.exe", "powershell.exe")
+```
+
+## 11. Escalation and handoff notes
 
 When writing this up for the incident ticket:
 1. Record what telemetry generated the alert, not just the alert title — the next analyst or auditor needs the actual signal (Event 7045, the WMI-Activity log entry, etc.), not "XDR flagged it."

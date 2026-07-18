@@ -92,7 +92,70 @@ Priority order:
 - If `comsvcs.dll,MiniDump` isn't already an explicit high-fidelity detection rule in your environment, that's a gap worth writing up — it's specific enough to alert on directly rather than relying on generic "process accessed LSASS" noise.
 - Consider whether LSASS protection (Credential Guard, RunAsPPL) is enabled fleet-wide — this doesn't stop every technique, but it closes off the easiest ones and is worth flagging as a hardening recommendation, not just a detection one.
 
-## 10. Escalation and handoff notes
+## 10. XDR/EDR query reference
+
+Same investigation, written as actual queries per platform. Adjust field names to your tenant's schema.
+
+**Cortex XDR (XQL)**
+```
+dataset = xdr_data
+| filter event_type = ENUM.PROCESS_ACCESS
+| filter target_process_image_name = "lsass.exe"
+| filter action_process_granted_access in ("0x1010", "0x1410", "0x1438")
+| fields agent_hostname, action_process_image_name, action_process_image_command_line, action_process_granted_access, _time
+| sort desc _time
+```
+Catching the comsvcs.dll MiniDump pattern specifically:
+```
+dataset = xdr_data
+| filter event_type = ENUM.PROCESS and action_process_image_name = "rundll32.exe"
+| filter action_process_image_command_line contains "comsvcs.dll" and action_process_image_command_line contains "MiniDump"
+```
+
+**Microsoft Defender XDR (KQL / Advanced Hunting)**
+```kql
+DeviceProcessEvents
+| where ProcessCommandLine has "comsvcs.dll" and ProcessCommandLine has "MiniDump"
+| project Timestamp, DeviceName, AccountName, FileName, ProcessCommandLine
+| order by Timestamp desc
+```
+Direct LSASS access attempts (Defender exposes this as a distinct event type):
+```kql
+DeviceEvents
+| where ActionType == "OpenProcessApiCall"
+| where InitiatingProcessFileName != "MsMpEng.exe"  // exclude Defender's own scanning
+| where FileName =~ "lsass.exe"
+| project Timestamp, DeviceName, InitiatingProcessFileName, InitiatingProcessAccountName, AdditionalFields
+```
+
+**CrowdStrike Falcon (Event Search / Falcon Query Language)**
+```
+event_simpleName=CredentialAccess
+| table ComputerName, UserName, FileName, TargetProcessId, GrantedAccess, _time
+```
+Or via process telemetry for the comsvcs pattern:
+```
+event_simpleName=ProcessRollup2 FileName=rundll32.exe
+| CommandLine="*comsvcs.dll*MiniDump*"
+| table ComputerName, UserName, CommandLine, _time
+```
+
+**Splunk (if ingesting Sysmon)**
+```spl
+index=main EventCode=10 TargetImage="*lsass.exe"
+| search GrantedAccess IN ("0x1010", "0x1410", "0x1438")
+| table _time, ComputerName, SourceImage, TargetImage, GrantedAccess
+| sort -_time
+```
+
+**Elastic (EQL)**
+```eql
+process where event.type == "start" and
+  process.name == "rundll32.exe" and
+  process.command_line like "*comsvcs.dll*MiniDump*"
+```
+
+## 11. Escalation and handoff notes
 
 When writing this up for the incident ticket or handing off to IR/AD teams:
 
