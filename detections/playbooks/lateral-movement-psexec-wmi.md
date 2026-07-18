@@ -95,11 +95,11 @@ After closing the incident, ask: **would we have caught this faster?**
 - If Event 7045 (new service) isn't currently alerting on non-standard install paths, that's a detection gap — write it up.
 - If the environment has no baseline of "which accounts normally do remote admin," that's a detection engineering opportunity (UEBA-style anomaly rule).
 
-## 10. Talking points for interviews
+## 10. Escalation and handoff notes
 
-If asked "walk me through how you'd investigate a lateral movement alert":
-1. State what telemetry generated it (don't just say "the XDR flagged it").
-2. Describe the triage questions you'd ask before touching the console.
-3. Walk the process tree and explain what each hop tells you.
-4. Give a clear true/false positive criterion — interviewers want to hear you have a *repeatable standard*, not a gut feeling.
-5. Close with scope → containment → the detection-improvement loop. This last part is what separates senior candidates — most people stop at "I'd isolate the host."
+When writing this up for the incident ticket:
+1. Record what telemetry generated the alert, not just the alert title — the next analyst or auditor needs the actual signal (Event 7045, the WMI-Activity log entry, etc.), not "XDR flagged it."
+2. List the triage questions you asked and their answers before you touched the process tree — this is what makes the call defensible later.
+3. Include the process tree with each hop annotated — don't make whoever reads the ticket re-derive what you already figured out.
+4. State your true/false positive call against a clear, repeatable criterion (see Section 5) rather than "this looked suspicious" — someone auditing closed tickets later should be able to see *why* it was closed that way.
+5. Always close the loop: scope → containment → whether a detection improvement was filed. An incident that's contained but never turned into a better detection rule is only half finished.
