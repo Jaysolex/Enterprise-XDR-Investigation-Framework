@@ -70,30 +70,41 @@ Enterprise-XDR-Investigation-Framework/
 
 ## Playbooks
 
-Eight playbooks are complete, forming one continuous attack lifecycle from initial access through impact — each links forward/backward to the stages around it rather than standing alone.
+Eleven playbooks are complete, covering three distinct categories: the external attack lifecycle (initial access through impact), insider risk, and cloud posture. Each follows the same fixed shape, and each references the stages around it rather than standing alone.
+
+### External attack chain
 
 | # | Playbook | MITRE ATT&CK | Chain position |
 |---|---|---|---|
 | 1 | [Phishing & Initial Access](detections/playbooks/phishing-initial-access.md) | T1566, T1204 | Entry point |
-| 2 | [Post-Access Reconnaissance & Discovery](detections/playbooks/recon-discovery.md) | T1082, T1087, T1018 | Orientation |
-| 3 | [Credential Dumping via LSASS Access](detections/playbooks/credential-dumping-lsass.md) | T1003.001 | Post-access |
-| 4 | [Lateral Movement via PsExec/WMI](detections/playbooks/lateral-movement-psexec-wmi.md) | T1021.002, T1047 | Propagation |
-| 5 | [Suspicious PowerShell & LOLBin Execution](detections/playbooks/powershell-lolbins.md) | T1059.001, T1218 | Staging/execution |
-| 6 | [C2 Beaconing Detection](detections/playbooks/c2-beaconing.md) | T1071, T1573 | Command channel |
-| 7 | [Data Exfiltration](detections/playbooks/data-exfiltration.md) | T1041, T1567 | Objective/impact |
-| 8 | [Ransomware Detection & Response](detections/playbooks/ransomware-detection-response.md) | T1486, T1490 | Alternate impact path |
+| 2 | [Brute Force & Credential Stuffing](detections/playbooks/brute-force-credential-stuffing.md) | T1110 | Alternate entry point |
+| 3 | [Post-Access Reconnaissance & Discovery](detections/playbooks/recon-discovery.md) | T1082, T1087, T1018 | Orientation |
+| 4 | [Credential Dumping via LSASS Access](detections/playbooks/credential-dumping-lsass.md) | T1003.001 | Post-access |
+| 5 | [Lateral Movement via PsExec/WMI](detections/playbooks/lateral-movement-psexec-wmi.md) | T1021.002, T1047 | Propagation |
+| 6 | [Suspicious PowerShell & LOLBin Execution](detections/playbooks/powershell-lolbins.md) | T1059.001, T1218 | Staging/execution |
+| 7 | [C2 Beaconing Detection](detections/playbooks/c2-beaconing.md) | T1071, T1573 | Command channel |
+| 8 | [Data Exfiltration](detections/playbooks/data-exfiltration.md) | T1041, T1567 | Objective/impact |
+| 9 | [Ransomware Detection & Response](detections/playbooks/ransomware-detection-response.md) | T1486, T1490 | Alternate impact path |
 
-The chain reads: a user opens something they shouldn't (1) → the attacker orients themselves in the environment, figuring out what's worth targeting (2) → dumps credentials from the host (3) → moves to other machines using those credentials (4) → stages further tooling using living-off-the-land techniques (5) → maintains a command channel back to their infrastructure (6) → and either exfiltrates data (7) or, in the more destructive case, encrypts everything reachable (8). Ransomware can also enter the chain directly from stage 4, without necessarily involving C2 or exfiltration first.
+The chain reads: a user opens something they shouldn't, or an attacker guesses/reuses their way in directly (1, 2) → the attacker orients themselves in the environment, figuring out what's worth targeting (3) → dumps credentials from the host (4) → moves to other machines using those credentials (5) → stages further tooling using living-off-the-land techniques (6) → maintains a command channel back to their infrastructure (7) → and either exfiltrates data (8) or, in the more destructive case, encrypts everything reachable (9). Ransomware can also enter the chain directly from stage 5, without necessarily involving C2 or exfiltration first.
 
-Every playbook follows the same fixed shape: detection signals → telemetry sources → triage questions → investigation/process tree → validation criteria → scope → containment → recovery → detection improvement → multi-platform query reference (Cortex XDR, Defender XDR, CrowdStrike, Splunk, Elastic) → escalation/handoff notes. Use playbook #3 (lateral movement) as the reference shape if adding a new one.
+### Distinct threat categories
+
+| # | Playbook | MITRE ATT&CK | Why it's separate |
+|---|---|---|---|
+| 10 | [Insider Threat Detection](detections/playbooks/insider-threat.md) | T1530, T1213, T1074 | Access is legitimate from the start — validation and containment run through HR/legal, not just security |
+| 11 | [Cloud Misconfiguration Exposure](detections/playbooks/cloud-misconfiguration-exposure.md) | T1530, T1580, T1078.004 | Often no attacker telemetry at all — you're hunting a condition, not a sequence of actions |
+
+Every playbook follows the same fixed shape: detection signals → telemetry sources → triage questions → investigation/process tree → validation criteria → scope → containment → recovery → detection improvement → multi-platform query reference → escalation/handoff notes. Use playbook #5 (lateral movement) as the reference shape if extending this further.
 
 ## How to use this
 
-1. Read the playbooks in chain order (table above) once, top to bottom, to see the full narrative — then treat each one as a standalone reference afterward.
-2. Reproduce the telemetry yourself where possible (Sysmon config + a lab VM, or sample logs).
-3. Map each to MITRE ATT&CK — already listed per playbook above; expand in `docs/` as needed.
-4. Repeat until the *pattern* — not the vendor UI — is what you see when you close your eyes.
+1. Read the external attack chain (playbooks 1–9) in order once, to see the full narrative — then treat each one as a standalone reference afterward.
+2. Read insider threat and cloud misconfiguration (10–11) as their own category — they deliberately don't fit the attacker-chain model and are useful precisely because they test a different kind of judgment.
+3. Reproduce the telemetry yourself where possible (Sysmon config + a lab VM, or sample logs).
+4. Map each to MITRE ATT&CK — already listed per playbook above; expand in `docs/` as needed.
+5. Repeat until the *pattern* — not the vendor UI — is what you see when you close your eyes.
 
 ## Status
 
-🚧 Living document — built while onboarding into a SOC analyst role. Core attack-chain playbooks (8) are complete. Next additions: insider threat, brute force/credential stuffing, cloud misconfiguration exposure.
+✅ Framework complete — 11 playbooks covering the full external attack lifecycle, insider risk, and cloud posture. Built while onboarding into a SOC analyst role; maintained as a living reference going forward rather than a fixed deliverable.
