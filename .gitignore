@@ -1,0 +1,18 @@
+# Never commit real telemetry, PCAPs, or logs from actual environments
+*.evtx
+*.pcap
+*.pcapng
+raw-logs/
+sample-data/private/
+
+# Credentials/config that might sneak in during lab work
+*.env
+secrets.*
+*.pem
+*.key
+
+# OS/editor noise
+.DS_Store
+.vscode/
+__pycache__/
+*.pyc
