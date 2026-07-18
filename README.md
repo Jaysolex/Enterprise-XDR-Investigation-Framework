@@ -70,19 +70,20 @@ Enterprise-XDR-Investigation-Framework/
 
 ## Playbooks
 
-Seven playbooks are complete, forming one continuous attack lifecycle from initial access through impact — each links forward/backward to the stages around it rather than standing alone.
+Eight playbooks are complete, forming one continuous attack lifecycle from initial access through impact — each links forward/backward to the stages around it rather than standing alone.
 
 | # | Playbook | MITRE ATT&CK | Chain position |
 |---|---|---|---|
 | 1 | [Phishing & Initial Access](detections/playbooks/phishing-initial-access.md) | T1566, T1204 | Entry point |
-| 2 | [Credential Dumping via LSASS Access](detections/playbooks/credential-dumping-lsass.md) | T1003.001 | Post-access |
-| 3 | [Lateral Movement via PsExec/WMI](detections/playbooks/lateral-movement-psexec-wmi.md) | T1021.002, T1047 | Propagation |
-| 4 | [Suspicious PowerShell & LOLBin Execution](detections/playbooks/powershell-lolbins.md) | T1059.001, T1218 | Staging/execution |
-| 5 | [C2 Beaconing Detection](detections/playbooks/c2-beaconing.md) | T1071, T1573 | Command channel |
-| 6 | [Data Exfiltration](detections/playbooks/data-exfiltration.md) | T1041, T1567 | Objective/impact |
-| 7 | [Ransomware Detection & Response](detections/playbooks/ransomware-detection-response.md) | T1486, T1490 | Alternate impact path |
+| 2 | [Post-Access Reconnaissance & Discovery](detections/playbooks/recon-discovery.md) | T1082, T1087, T1018 | Orientation |
+| 3 | [Credential Dumping via LSASS Access](detections/playbooks/credential-dumping-lsass.md) | T1003.001 | Post-access |
+| 4 | [Lateral Movement via PsExec/WMI](detections/playbooks/lateral-movement-psexec-wmi.md) | T1021.002, T1047 | Propagation |
+| 5 | [Suspicious PowerShell & LOLBin Execution](detections/playbooks/powershell-lolbins.md) | T1059.001, T1218 | Staging/execution |
+| 6 | [C2 Beaconing Detection](detections/playbooks/c2-beaconing.md) | T1071, T1573 | Command channel |
+| 7 | [Data Exfiltration](detections/playbooks/data-exfiltration.md) | T1041, T1567 | Objective/impact |
+| 8 | [Ransomware Detection & Response](detections/playbooks/ransomware-detection-response.md) | T1486, T1490 | Alternate impact path |
 
-The chain reads: a user opens something they shouldn't (1) → the attacker dumps credentials from the host (2) → moves to other machines using those credentials (3) → stages further tooling using living-off-the-land techniques (4) → maintains a command channel back to their infrastructure (5) → and either exfiltrates data (6) or, in the more destructive case, encrypts everything reachable (7). Ransomware can also enter the chain directly from stage 3, without necessarily involving C2 or exfiltration first.
+The chain reads: a user opens something they shouldn't (1) → the attacker orients themselves in the environment, figuring out what's worth targeting (2) → dumps credentials from the host (3) → moves to other machines using those credentials (4) → stages further tooling using living-off-the-land techniques (5) → maintains a command channel back to their infrastructure (6) → and either exfiltrates data (7) or, in the more destructive case, encrypts everything reachable (8). Ransomware can also enter the chain directly from stage 4, without necessarily involving C2 or exfiltration first.
 
 Every playbook follows the same fixed shape: detection signals → telemetry sources → triage questions → investigation/process tree → validation criteria → scope → containment → recovery → detection improvement → multi-platform query reference (Cortex XDR, Defender XDR, CrowdStrike, Splunk, Elastic) → escalation/handoff notes. Use playbook #3 (lateral movement) as the reference shape if adding a new one.
 
@@ -95,4 +96,4 @@ Every playbook follows the same fixed shape: detection signals → telemetry sou
 
 ## Status
 
-🚧 Living document — built while onboarding into a SOC analyst role. Core attack-chain playbooks (7) are complete. Next additions: insider threat, brute force/credential stuffing, cloud misconfiguration exposure.
+🚧 Living document — built while onboarding into a SOC analyst role. Core attack-chain playbooks (8) are complete. Next additions: insider threat, brute force/credential stuffing, cloud misconfiguration exposure.
